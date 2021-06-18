@@ -108,91 +108,36 @@ class MyoRaw():
         self.backend.recv_packet(timeout)
 
     def subscribe(self, emg_mode=EMGMode.RAW, imu_mode=IMUMode.ON, clf_state=CLFState.ACTIVE, battery=True):
-        '''
-        Subscribe to chosen data channels. Note that the parameters have no influcence when using a
-        Myo with version less than 1.0.0.0. In this case only EMG and IMU data are enabled.
-
-        :param emg_mode: the mode of the EMG data stream (sampling rate and filters)
-
-          :0: deactivate EMG data
-          :1: 50 Hz sampling rate, smoothed and rectified signals ("hidden" EMG mode)
-          :2: 200 Hz sampling rate, power line noise filters (50 and 60 Hz notch filters)
-          :3: 200 Hz sampling rate, raw data
-
-        :param imu_mode: the mode of the IMU data stream (always 50 Hz sampling rate)
-
-          :0: deactivate IMU data
-          :1: send IMU data (accelerometer, gyroscope and orientation as a quaternion)
-          :2: send motion events (events detected by the IMU)
-          :3: send both, motion events and IMU data
-          :4: send raw (original orientation) IMU data
-
-        :param clf_state: the state of the on-board classifier
-
-          :0: deactivate the on-board classifier (disable the sync gesture)
-          :1: activate the on-board classifier and enable the indication to send arm and pose data
-          :2: activate the on-board classifier but disable the indication (sync gesture is enabled)
-
-        :param battery: whether to enable battery notifications or not
-        '''
-
-        if self.version < (1, 0, 0, 0):
-            # don't know what these do; Myo Connect sends them, though we get data fine without them
-            self.backend.write_attr(0x19, b'\x01\x02\x00\x00')
-            # subscribe to notifications of the four official EMG characteristics
-            self.backend.write_attr(0x2f, b'\x01\x00')
-            self.backend.write_attr(0x2c, b'\x01\x00')
-            self.backend.write_attr(0x32, b'\x01\x00')
-            self.backend.write_attr(0x35, b'\x01\x00')
-            # subscribe to notifications of the "hidden" EMG characteristics
-            self.backend.write_attr(0x28, b'\x01\x00')
-            # subscribe to notifications of the IMU characteristic
+        # subscribe to notifications of the IMU characteristic
+        if imu_mode != IMUMode.OFF:
             self.backend.write_attr(0x1d, b'\x01\x00')
-
-            # Sampling rate of the underlying EMG sensor, capped to 1000. If it's less than 1000,
-            # emg_hz is correct. If it is greater, the actual framerate starts dropping inversely.
-            # Also, if this is much less than 1000, EMG data becomes slower to respond to changes.
-            # In conclusion, 1000 is probably a good value.
-            f_s = 1000
-            emg_hz = 50
-            # strength of low-pass filtering of EMG data
-            emg_smooth = 100
-            imu_hz = 50
-            # send sensor parameters, or we don't get any data
-            data = struct.pack('<4BH5B', 2, 9, 2, 1, f_s, emg_smooth, f_s // emg_hz, imu_hz, 0, 0)
-            self.backend.write_attr(0x19, data)
-        else:
-            # subscribe to notifications of the IMU characteristic
-            if imu_mode != IMUMode.OFF:
-                self.backend.write_attr(0x1d, b'\x01\x00')
-            # subscribe to indications of the classifier (arm on/off, pose, etc.) characteristic
-            if clf_state == CLFState.ACTIVE:
-                self.backend.write_attr(0x24, b'\x02\x00')
-            # subscribe to notifications of the battery characteristic
-            if battery:
-                self.backend.write_attr(0x12, b'\x01\x10')
-            # subscribe to notifications of the EMG characteristic(s)
-            if emg_mode in [EMGMode.RAW, EMGMode.RAW_FILTERED]:
-                # subscribe to notifications of the four official EMG characteristics
-                self.backend.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
-                self.backend.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
-                self.backend.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
-                self.backend.write_attr(0x35, b'\x01\x00')  # Suscribe to EmgData3Characteristic
-            elif emg_mode == EMGMode.SMOOTHED:
-                # subscribe to notifications of the "hidden" (not listed in the myohw_services enum
-                # of the official BLE specification from Thalmic Labs) EMG characteristic
-                self.backend.write_attr(0x28, b'\x01\x00')
-
-            # Activate EMG, IMU and classifier notifications. Note that sending a 0x01 for the EMG
-            # mode (not listed on the myohw_emg_mode_t struct of the Myo BLE specification) will
-            # enable the transmission of a stream of low-pass filtered EMG signals from the eight
-            # sensor pods of the Myo armband (the "hidden" mode mentioned above).
-            # Instead of getting raw EMG signals, we get rectified and smoothed signals, a measure
-            # of the amplitude of the EMG (which is useful as a measure of muscle strength, but is
-            # not as useful as a truly raw signal).
-            # command breakdown: set EMG and IMU, payload size = 3, EMG, IMU and classifier modes
-            clf_mode = clf_state != CLFState.OFF
-            self.backend.write_attr(0x19, b'\x01\x03' + bytes([emg_mode, imu_mode, clf_mode]))
+        # subscribe to indications of the classifier (arm on/off, pose, etc.) characteristic
+        if clf_state == CLFState.ACTIVE:
+            self.backend.write_attr(0x24, b'\x02\x00')
+        # subscribe to notifications of the battery characteristic
+        if battery:
+            self.backend.write_attr(0x12, b'\x01\x10')
+        # subscribe to notifications of the EMG characteristic(s)
+        if emg_mode in [EMGMode.RAW, EMGMode.RAW_FILTERED]:
+            # subscribe to notifications of the four official EMG characteristics
+            self.backend.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
+            self.backend.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
+            self.backend.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
+            self.backend.write_attr(0x35, b'\x01\x00')  # Suscribe to EmgData3Characteristic
+        elif emg_mode == EMGMode.SMOOTHED:
+            # subscribe to notifications of the "hidden" (not listed in the myohw_services enum
+            # of the official BLE specification from Thalmic Labs) EMG characteristic
+            self.backend.write_attr(0x28, b'\x01\x00')
+        # Activate EMG, IMU and classifier notifications. Note that sending a 0x01 for the EMG
+        # mode (not listed on the myohw_emg_mode_t struct of the Myo BLE specification) will
+        # enable the transmission of a stream of low-pass filtered EMG signals from the eight
+        # sensor pods of the Myo armband (the "hidden" mode mentioned above).
+        # Instead of getting raw EMG signals, we get rectified and smoothed signals, a measure
+        # of the amplitude of the EMG (which is useful as a measure of muscle strength, but is
+        # not as useful as a truly raw signal).
+        # command breakdown: set EMG and IMU, payload size = 3, EMG, IMU and classifier modes
+        clf_mode = clf_state != CLFState.OFF
+        self.backend.write_attr(0x19, b'\x01\x03' + bytes([emg_mode, imu_mode, clf_mode]))
 
         # add data handlers
         def handle_data(attr, pay):
