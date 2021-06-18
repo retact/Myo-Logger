@@ -1,6 +1,7 @@
 #
 # Original work Copyright (c) 2014 Danny Zhu
 # Modified work Copyright (c) 2018 Jamie Forth
+# Modified work Copyright (c) 2021 retact
 #
 # Licensed under the MIT license. See the LICENSE file for details.
 #
@@ -39,8 +40,6 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--tty', default=None,
                         help='The Myo dongle device (autodetected if omitted)')
-    group.add_argument('--native', default=False, action='store_true',
-                        help='Use a native Bluetooth stack')
     parser.add_argument('--mac', default=None, help='The Myo device')
     modes = ', '.join([str(item.value) + ': ' + item.name for item in EMGMode])
     parser.add_argument('--emg_mode', type=int, default=EMGMode.SMOOTHED,
@@ -65,7 +64,8 @@ if __name__ == '__main__':
                             quoting=csv.QUOTE_MINIMAL)
     imu_writer.writerow(imu_header)
 
-    m = MyoRaw(args.tty, args.native, args.mac)
+    #m = MyoRaw(args.tty, args.native, args.mac)
+    m =MyoRaw(args.tty, args.mac)
     m.add_handler(DataCategory.EMG, lambda *args: write_data(emg_writer, args))
     m.add_handler(DataCategory.IMU, lambda *args: write_data(imu_writer, args))
     m.subscribe(args.emg_mode)

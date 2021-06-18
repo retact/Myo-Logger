@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2018 Matthias Gazzari
+# Copyright (c) 2021 retact
 #
 # Licensed under the MIT license. See the LICENSE file for details.
 #

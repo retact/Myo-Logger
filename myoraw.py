@@ -4,7 +4,7 @@
 # Modified work Copyright (c) 2017 Fernando Cosentino
 # Modified work Copyright (c) 2018 Google LLC
 # Modified work Copyright (c) 2018 Matthias Gazzari
-#
+# Modified work Copyright (c) 2021 retact
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
@@ -14,12 +14,6 @@ import time
 import logging
 from consumerpool import ConsumerPool
 from bled112 import BLED112
-try:
-    from .native import Native
-except ImportError:
-    NATIVE_SUPPORT = False
-else:
-    NATIVE_SUPPORT = True
 
 LOG = logging.getLogger(__name__)
 
@@ -77,7 +71,7 @@ class CLFState(enum.IntEnum):
 class MyoRaw():
     '''Implements the Myo-specific communication protocol.'''
 
-    def __init__(self, tty=None, native=False, mac=None):
+    def __init__(self, tty=None,mac=None):
         '''
         Scan and connect to a Myo armband using either the BLED112 or a native Bluetooth adapter
 
@@ -85,9 +79,7 @@ class MyoRaw():
         :param native: if true try to use a native Bluetooth adapter (Linux only)
         :param mac: the MAC address of the Myo (randomly chosen if None)
         '''
-        if native and not NATIVE_SUPPORT:
-            raise ImportError('bluepy is required to use a native Bluetooth adapter')
-        self.backend = Native() if native else BLED112(tty)
+        self.backend = BLED112(tty)
         self.cpool = ConsumerPool(DataCategory)
 
         # scan and connect to a Myo armband and extract the firmware version

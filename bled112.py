@@ -3,6 +3,7 @@
 # Modified work Copyright (c) 2017 Alvaro Villoslada
 # Modified work Copyright (c) 2017 Fernando Cosentino
 # Modified work Copyright (c) 2018 Matthias Gazzari
+# Modified work Copyright (c) 2021 retact
 #
 # Licensed under the MIT license. See the LICENSE file for details.
 #
