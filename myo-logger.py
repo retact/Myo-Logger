@@ -24,7 +24,7 @@ imu_header = ['timestamp', 'ori_w', 'ori_x', 'ori_y', 'ori_z', 'accel_1',
 
 def flatten(l):
     for el in l:
-        if isinstance(el, collections.Iterable) and not (
+        if isinstance(el, collections.abc.Iterable) and not (
                 isinstance(el, (str, bytes))):
             yield from flatten(el)
         else:
@@ -56,19 +56,16 @@ if __name__ == '__main__':
     emg_file = outdir.joinpath(now + '_emg.csv').open(mode='w', newline='')
     imu_file = outdir.joinpath(now + '_imu.csv').open(mode='w', newline='')
 
-    emg_writer = csv.writer(emg_file, csv.unix_dialect,
-                            quoting=csv.QUOTE_MINIMAL)
+    emg_writer = csv.writer(emg_file, csv.unix_dialect,quoting=csv.QUOTE_MINIMAL)
     emg_writer.writerow(emg_header)
 
-    imu_writer = csv.writer(imu_file, csv.unix_dialect,
-                            quoting=csv.QUOTE_MINIMAL)
+    imu_writer = csv.writer(imu_file, csv.unix_dialect,quoting=csv.QUOTE_MINIMAL)
     imu_writer.writerow(imu_header)
 
-    #m = MyoRaw(args.tty, args.native, args.mac)
     m =MyoRaw(args.tty, args.mac)
     m.add_handler(DataCategory.EMG, lambda *args: write_data(emg_writer, args))
     m.add_handler(DataCategory.IMU, lambda *args: write_data(imu_writer, args))
-    m.subscribe(args.emg_mode)
+    m.subscribe(EMGMode.RAW)
 
     # Enable never sleep mode.
     m.set_sleep_mode(1)
