@@ -28,11 +28,11 @@ automatically, but if that doesn't work, here's how to find it out manually:
 ### exmample
 -mac  
  ```
- python myo-logger.py /dev/tty.usb*
+ python myo-logger.py --tty /dev/tty.usb*
  ```
 -linux  
  ```
- python myo-logger.py /dev/ttyACM*
+ python myo-logger.py --tty /dev/ttyACM*
  ```
 
 
